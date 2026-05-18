@@ -506,6 +506,7 @@ function renderModal() {
   </div>
   <div class="modal-body">
     <div class="form-row">
+      <div class="form-group"><label>Your name</label><input id="f-driver" placeholder="Your name" value=""></div>
       <div class="form-group"><label>Odometer</label><input id="f-odo" placeholder="Current miles" value="${existing ? (existing.Odometer||'') : ''}"></div>
     </div>`;
 
@@ -566,8 +567,10 @@ function closeModal() {
 
 async function submitChecklist() {
   if (!activeVehicle) return;
+  const driver = document.getElementById('f-driver').value.trim();
   const odo = document.getElementById('f-odo').value.trim();
   const comments = document.getElementById('f-comments').value.trim();
+  if (!driver) { showToast('Please enter your name'); return; }
 
   const hasAttn = Object.values(checkState).some(v => v.val === 'na');
   const btn = document.getElementById('submit-btn');
@@ -578,6 +581,7 @@ async function submitChecklist() {
     action: 'submit',
     vehicleId: activeVehicle.id,
     week: currentWeek,
+    driver,
     odometer: odo,
     status: hasAttn ? 'attention' : 'ok',
     comments: comments,
@@ -594,6 +598,7 @@ async function submitChecklist() {
         SubmissionKey: res.key,
         VehicleId: activeVehicle.id,
         Week: currentWeek,
+        Driver: driver,
         Odometer: odo,
         Status: hasAttn ? 'attention' : 'ok',
         Comments: comments,
