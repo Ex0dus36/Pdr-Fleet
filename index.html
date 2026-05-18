@@ -551,8 +551,49 @@ function handleModalBgClick(e) {
 function toggleItem(safeKey, val) {
   const key = decodeURIComponent(safeKey);
   if (!checkState[key]) checkState[key] = {};
+
+  // Save current scroll position and field values before any DOM changes
+  const modalBg = document.getElementById('modal-overlay');
+  const scrollTop = modalBg ? modalBg.scrollTop : 0;
+  const driverVal = document.getElementById('f-driver') ? document.getElementById('f-driver').value : '';
+  const odoVal = document.getElementById('f-odo') ? document.getElementById('f-odo').value : '';
+  const commentsVal = document.getElementById('f-comments') ? document.getElementById('f-comments').value : '';
+
+  // Toggle the value
   checkState[key].val = checkState[key].val === val ? null : val;
-  renderModal();
+
+  // Update just the two toggle buttons for this item
+  const okBtn = document.querySelector(`button.tog.ok[onclick="toggleItem('${safeKey}','ok')"]`);
+  const naBtn = document.querySelector(`button.tog.na[onclick="toggleItem('${safeKey}','na')"]`);
+  if (okBtn) okBtn.classList.toggle('on', checkState[key].val === 'ok');
+  if (naBtn) naBtn.classList.toggle('on', checkState[key].val === 'na');
+
+  // Handle the Attn comment textarea - insert or remove without full re-render
+  const itemRow = okBtn ? okBtn.closest('.chk-item') : null;
+  if (itemRow) {
+    let existing = itemRow.nextElementSibling;
+    const isComment = existing && existing.classList.contains('attn-comment');
+    if (checkState[key].val === 'na') {
+      if (!isComment) {
+        const ta = document.createElement('textarea');
+        ta.className = 'attn-comment';
+        ta.rows = 2;
+        ta.placeholder = 'Describe the issue...';
+        ta.value = checkState[key].comment || '';
+        ta.setAttribute('oninput', `setComment('${safeKey}',this.value)`);
+        ta.addEventListener('input', function(){ setComment(safeKey, this.value); });
+        itemRow.insertAdjacentElement('afterend', ta);
+      }
+    } else {
+      if (isComment) existing.remove();
+    }
+  }
+
+  // Restore field values and scroll position
+  if (document.getElementById('f-driver')) document.getElementById('f-driver').value = driverVal;
+  if (document.getElementById('f-odo')) document.getElementById('f-odo').value = odoVal;
+  if (document.getElementById('f-comments')) document.getElementById('f-comments').value = commentsVal;
+  if (modalBg) modalBg.scrollTop = scrollTop;
 }
 function setComment(safeKey, val) {
   const key = decodeURIComponent(safeKey);
